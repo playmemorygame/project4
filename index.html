@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Battle Mute Tool — One Song, Two Parts</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --card-hover: #1c2333;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79b8ff;
+            --accent-glow: rgba(88, 166, 255, 0.25);
+            --success: #3fb950;
+            --success-glow: rgba(63, 185, 80, 0.25);
+            --warning: #d2991d;
+            --danger: #f85149;
+            --danger-glow: rgba(248, 81, 73, 0.2);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.4);
+            --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 50% 0%, rgba(88, 166, 255, 0.06) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(63, 185, 80, 0.04) 0%, transparent 60%), radial-gradient(ellipse at 20% 70%, rgba(248, 81, 73, 0.03) 0%, transparent 50%);
+        }
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .header {
+            text-align: center;
+            padding: 8px 0;
+        }
+        .header .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a2a3a, #1c2840);
+            border: 2px solid var(--border);
+            margin-bottom: 12px;
+            font-size: 26px;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #e6edf3 0%, #b0c4d8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 24px;
+            width: 100%;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 30px;
+            box-shadow: var(--shadow-md);
+            transition: border-color var(--transition), box-shadow var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            border-color: #445;
+            box-shadow: var(--shadow-lg);
+        }
+        .slot-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .slot-number {
+            background: var(--accent);
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: rgba(22, 27, 34, 0.5);
+            margin-bottom: 16px;
+        }
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(88, 166, 255, 0.04);
+            box-shadow: inset 0 0 60px rgba(88, 166, 255, 0.04);
+        }
+        .upload-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(88, 166, 255, 0.08);
+            box-shadow: 0 0 40px var(--accent-glow), inset 0 0 60px rgba(88, 166, 255, 0.06);
+            transform: scale(1.01);
+        }
+        .upload-zone.has-file {
+            border-color: var(--success);
+            border-style: solid;
+            background: rgba(63, 185, 80, 0.03);
+            box-shadow: 0 0 30px var(--success-glow);
+            padding: 18px 20px;
+        }
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .upload-zone h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .upload-zone p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        .upload-zone .browse-link {
+            color: var(--accent);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+        .file-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(63, 185, 80, 0.12);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--success);
+            margin-top: 8px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse-dot 1.8s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(63, 185, 80, 0);
+            }
+        }
+        .mp3-section {
+            margin: 10px 0 12px 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .mp3-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .mp3-upload-btn {
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            color: var(--text);
+            cursor: pointer;
+        }
+        .mp3-upload-btn:hover {
+            border-color: var(--accent);
+            background: rgba(88, 166, 255, 0.1);
+        }
+        .mp3-name {
+            font-size: 0.75rem;
+            color: var(--success);
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .mp3-remove {
+            font-size: 0.7rem;
+            color: var(--danger);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .trim-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+            width: 100%;
+        }
+        .trim-controls.inactive {
+            display: none;
+        }
+        .trim-slider-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .trim-slider-group input[type="range"] {
+            width: 100px;
+            accent-color: var(--accent);
+        }
+        .trim-time {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .trim-duration {
+            font-size: 0.7rem;
+            color: var(--accent);
+        }
+        .trim-section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        .trim-columns {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .trim-column {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .video-wrapper {
+            position: relative;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+        }
+        .video-placeholder {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 20px;
+        }
+        .processing-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border-radius: var(--radius-sm);
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .processing-overlay.active {
+            opacity: 1;
+        }
+        .spinner {
+            width: 38px;
+            height: 38px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .progress-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+        .progress-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 8px 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .progress-bar.active {
+            opacity: 1;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            width: 0%;
+            transition: width 0.3s linear;
+        }
+        .info-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 4px 0;
+        }
+        .info-chip {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 4px 10px;
+            font-family: var(--font-mono);
+        }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: var(--radius-xs);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all var(--transition);
+            font-family: var(--font);
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        .btn-primary:disabled {
+            background: #2a3a50;
+            border-color: #3a4a60;
+            color: #6a7a8a;
+            cursor: not-allowed;
+            pointer-events: none;
+            box-shadow: none;
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+            border-color: var(--success);
+            box-shadow: 0 0 20px var(--success-glow);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--border);
+        }
+        .btn-outline:hover {
+            border-color: #667;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .btn-outline.danger {
+            color: var(--danger);
+            border-color: rgba(248, 81, 73, 0.4);
+        }
+        .btn-outline.danger:hover {
+            border-color: var(--danger);
+            background: rgba(248, 81, 73, 0.06);
+        }
+        .download-area {
+            display: none;
+            margin-top: 12px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+        .download-area.active {
+            display: block;
+        }
+        .battle-section {
+            margin-top: 8px;
+            display: none;
+            flex-direction: column;
+        }
+        .battle-section.visible {
+            display: flex;
+        }
+        .battle-section .battle-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: #1a1f2b;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            border-color: var(--success);
+            box-shadow: 0 10px 40px var(--success-glow);
+        }
+        .toast.error {
+            border-color: var(--danger);
+            box-shadow: 0 10px 40px var(--danger-glow);
+        }
+        @media (max-width: 700px) {
+            .slots-grid {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                padding: 16px 14px;
+            }
+            .upload-zone {
+                padding: 24px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo-icon">🎬🎬</div>
+            <h1>Dance Battle Mute Tool</h1>
+            <p class="subtitle">Import one song • Trim different parts per dancer • Battle export</p>
+        </div>
+
+        <!-- Shared MP3 Card -->
+        <div class="card" id="sharedMp3Card">
+            <div class="slot-title"><span class="slot-number">🎵</span> Shared Song</div>
+            <div class="mp3-section">
+                <button class="mp3-upload-btn" id="sharedMp3Select">Choose MP3</button>
+                <span class="mp3-name" id="sharedMp3Name"></span>
+                <span class="mp3-remove" id="sharedMp3Remove" style="display:none;">✕ Remove</span>
+                <input type="file" accept="audio/*" id="sharedMp3Input" style="display:none;">
+            </div>
+            <div class="trim-columns">
+                <div class="trim-column">
+                    <span class="trim-section-label">🔹 Dancer A Segment</span>
+                    <div class="trim-controls inactive" id="trimAControls">
+                        <div class="trim-slider-group"><span>Start</span><input type="range" id="trimAStart" min="0" max="100" step="0.1" value="0"><span class="trim-time" id="trimAStartTime">0.0s</span></div>
+                        <div class="trim-slider-group"><span>End</span><input type="range" id="trimAEnd" min="0" max="100" step="0.1" value="100"><span class="trim-time" id="trimAEndTime">0.0s</span></div>
+                        <span class="trim-duration" id="trimADuration">Segment: 0.0s</span>
+                    </div>
+                </div>
+                <div class="trim-column">
+                    <span class="trim-section-label">🔸 Dancer B Segment</span>
+                    <div class="trim-controls inactive" id="trimBControls">
+                        <div class="trim-slider-group"><span>Start</span><input type="range" id="trimBStart" min="0" max="100" step="0.1" value="0"><span class="trim-time" id="trimBStartTime">0.0s</span></div>
+                        <div class="trim-slider-group"><span>End</span><input type="range" id="trimBEnd" min="0" max="100" step="0.1" value="100"><span class="trim-time" id="trimBEndTime">0.0s</span></div>
+                        <span class="trim-duration" id="trimBDuration">Segment: 0.0s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slots-grid" id="slotsGrid">
+            <!-- Slot 1 -->
+            <div class="card video-slot" data-slot="1">
+                <div class="slot-title"><span class="slot-number">1</span> Dancer A</div>
+                <div class="upload-zone">
+                    <span class="upload-icon">📁</span>
+                    <h3>Drop video here</h3>
+                    <p>or <span class="browse-link">browse files</span></p>
+                    <input type="file" accept="video/*">
+                </div>
+                <div class="file-badge" style="display:none;"></div>
+                <div class="video-wrapper">
+                    <video controls muted playsinline crossorigin="anonymous"></video>
+                    <div class="video-placeholder">No video loaded</div>
+                    <div class="processing-overlay">
+                        <div class="spinner"></div>
+                        <span class="progress-text">Processing...</span>
+                        <span class="progress-sub"></span>
+                    </div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+                <div class="info-chips"></div>
+                <div class="btn-row">
+                    <button class="btn btn-primary process-btn" disabled>🔇 Mute & Export</button>
+                    <button class="btn btn-outline change-btn">📂 Change</button>
+                    <button class="btn btn-outline preview-mute-btn" disabled>👂 Toggle Mute</button>
+                </div>
+                <div class="download-area">
+                    <p style="font-weight:600;color:var(--success);">✅ Video ready</p>
+                    <div class="btn-row">
+                        <a class="btn btn-success download-link" href="#" download="dancer_a_muted.webm">⬇️ Download</a>
+                        <button class="btn btn-outline preview-processed-btn">▶️ Preview</button>
+                        <button class="btn btn-outline danger discard-btn">🗑️ Discard</button>
+                    </div>
+                    <p class="output-info"></p>
+                </div>
+            </div>
+            <!-- Slot 2 -->
+            <div class="card video-slot" data-slot="2">
+                <div class="slot-title"><span class="slot-number">2</span> Dancer B</div>
+                <div class="upload-zone">
+                    <span class="upload-icon">📁</span>
+                    <h3>Drop video here</h3>
+                    <p>or <span class="browse-link">browse files</span></p>
+                    <input type="file" accept="video/*">
+                </div>
+                <div class="file-badge" style="display:none;"></div>
+                <div class="video-wrapper">
+                    <video controls muted playsinline crossorigin="anonymous"></video>
+                    <div class="video-placeholder">No video loaded</div>
+                    <div class="processing-overlay">
+                        <div class="spinner"></div>
+                        <span class="progress-text">Processing...</span>
+                        <span class="progress-sub"></span>
+                    </div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+                <div class="info-chips"></div>
+                <div class="btn-row">
+                    <button class="btn btn-primary process-btn" disabled>🔇 Mute & Export</button>
+                    <button class="btn btn-outline change-btn">📂 Change</button>
+                    <button class="btn btn-outline preview-mute-btn" disabled>👂 Toggle Mute</button>
+                </div>
+                <div class="download-area">
+                    <p style="font-weight:600;color:var(--success);">✅ Video ready</p>
+                    <div class="btn-row">
+                        <a class="btn btn-success download-link" href="#" download="dancer_b_muted.webm">⬇️ Download</a>
+                        <button class="btn btn-outline preview-processed-btn">▶️ Preview</button>
+                        <button class="btn btn-outline danger discard-btn">🗑️ Discard</button>
+                    </div>
+                    <p class="output-info"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card battle-section" id="battleSection">
+            <div class="battle-title">⚔️ Battle Mode — Sequential Side‑by‑Side with One Song</div>
+            <p style="color:var(--text-secondary);margin-bottom:12px;">
+                Dancer A plays first (left), then Dancer B (right). Audio uses each dancer's trimmed segment from the same song.
+            </p>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btnBattle" disabled>🎬 Generate Battle Video</button>
+                <button class="btn btn-outline danger" id="btnCancelBattle" disabled style="display:none;">⏹️ Cancel</button>
+            </div>
+            <div class="battle-progress" style="margin-top:12px;display:none;">
+                <div class="progress-bar active"><div class="progress-fill" id="battleProgressFill" style="width:0%;"></div></div>
+                <p class="progress-text" id="battleProgressText">Preparing...</p>
+            </div>
+            <div class="battle-download" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:14px;">
+                <p style="font-weight:600;color:var(--success);">✅ Battle video ready!</p>
+                <a class="btn btn-success" id="btnDownloadBattle" href="#" download="dance_battle_trimmed.webm">⬇️ Download</a>
+                <button class="btn btn-outline" id="btnDiscardBattle">🗑️ Discard</button>
+                <p id="battleOutputInfo"></p>
+            </div>
+        </div>
+
+        <p style="text-align:center;font-size:0.7rem;color:var(--text-secondary);opacity:0.7;">
+            🔒 All processing local. Output: WebM with trimmed MP3 audio (if provided).
+        </p>
+    </div>
+    <div class="toast" id="globalToast"></div>
+
+    <script>
+        (function() {
+            const toast = document.getElementById('globalToast');
+            let toastTimeout;
+
+            function showToast(msg, type = '') {
+                if (toastTimeout) clearTimeout(toastTimeout);
+                toast.textContent = msg;
+                toast.className = 'toast ' + type + ' show';
+                toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            function formatDuration(s) {
+                if (!isFinite(s) || s < 0) return '--:--';
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60);
+                return `${m}:${sec.toString().padStart(2,'0')}`;
+            }
+
+            function formatSize(b) {
+                if (!b) return '0 B';
+                const k = 1024,
+                    sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(b) / Math.log(k));
+                return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function getResolution(v) {
+                return v.videoWidth && v.videoHeight ? `${v.videoWidth}×${v.videoHeight}` : 'Unknown';
+            }
+
+            // ───────────────────────────────────
+            // Shared MP3 state
+            // ───────────────────────────────────
+            let sharedAudioBuffer = null;
+            let sharedTrimA = { start: 0, end: 0 };
+            let sharedTrimB = { start: 0, end: 0 };
+
+            const sharedSelect = document.getElementById('sharedMp3Select');
+            const sharedInput = document.getElementById('sharedMp3Input');
+            const sharedName = document.getElementById('sharedMp3Name');
+            const sharedRemove = document.getElementById('sharedMp3Remove');
+            const trimAControls = document.getElementById('trimAControls');
+            const trimBControls = document.getElementById('trimBControls');
+            const trimAStartSlider = document.getElementById('trimAStart');
+            const trimAEndSlider = document.getElementById('trimAEnd');
+            const trimBStartSlider = document.getElementById('trimBStart');
+            const trimBEndSlider = document.getElementById('trimBEnd');
+            const trimAStartTime = document.getElementById('trimAStartTime');
+            const trimAEndTime = document.getElementById('trimAEndTime');
+            const trimBStartTime = document.getElementById('trimBStartTime');
+            const trimBEndTime = document.getElementById('trimBEndTime');
+            const trimADuration = document.getElementById('trimADuration');
+            const trimBDuration = document.getElementById('trimBDuration');
+
+            function updateSharedTrimUI() {
+                if (!sharedAudioBuffer) {
+                    trimAControls.classList.add('inactive');
+                    trimBControls.classList.add('inactive');
+                    trimAStartSlider.max = 100;
+                    trimAEndSlider.max = 100;
+                    trimBStartSlider.max = 100;
+                    trimBEndSlider.max = 100;
+                    trimAStartSlider.value = 0;
+                    trimAEndSlider.value = 100;
+                    trimBStartSlider.value = 0;
+                    trimBEndSlider.value = 100;
+                    trimAStartTime.textContent = '0.0s';
+                    trimAEndTime.textContent = '0.0s';
+                    trimBStartTime.textContent = '0.0s';
+                    trimBEndTime.textContent = '0.0s';
+                    trimADuration.textContent = 'Segment: 0.0s';
+                    trimBDuration.textContent = 'Segment: 0.0s';
+                    return;
+                }
+                const dur = sharedAudioBuffer.duration;
+                trimAControls.classList.remove('inactive');
+                trimBControls.classList.remove('inactive');
+                trimAStartSlider.max = dur;
+                trimAEndSlider.max = dur;
+                trimBStartSlider.max = dur;
+                trimBEndSlider.max = dur;
+                trimAStartSlider.value = sharedTrimA.start;
+                trimAEndSlider.value = sharedTrimA.end;
+                trimBStartSlider.value = sharedTrimB.start;
+                trimBEndSlider.value = sharedTrimB.end;
+                trimAStartTime.textContent = sharedTrimA.start.toFixed(1) + 's';
+                trimAEndTime.textContent = sharedTrimA.end.toFixed(1) + 's';
+                trimBStartTime.textContent = sharedTrimB.start.toFixed(1) + 's';
+                trimBEndTime.textContent = sharedTrimB.end.toFixed(1) + 's';
+                trimADuration.textContent = 'Segment: ' + Math.max(0, sharedTrimA.end - sharedTrimA.start).toFixed(1) + 's';
+                trimBDuration.textContent = 'Segment: ' + Math.max(0, sharedTrimB.end - sharedTrimB.start).toFixed(1) + 's';
+            }
+
+            function handleSharedSlider() {
+                if (!sharedAudioBuffer) return;
+                sharedTrimA.start = parseFloat(trimAStartSlider.value);
+                sharedTrimA.end = parseFloat(trimAEndSlider.value);
+                if (sharedTrimA.start > sharedTrimA.end) { const t = sharedTrimA.start;
+                    sharedTrimA.start = sharedTrimA.end;
+                    sharedTrimA.end = t; }
+                sharedTrimB.start = parseFloat(trimBStartSlider.value);
+                sharedTrimB.end = parseFloat(trimBEndSlider.value);
+                if (sharedTrimB.start > sharedTrimB.end) { const t = sharedTrimB.start;
+                    sharedTrimB.start = sharedTrimB.end;
+                    sharedTrimB.end = t; }
+                updateSharedTrimUI();
+            }
+
+            trimAStartSlider.addEventListener('input', handleSharedSlider);
+            trimAEndSlider.addEventListener('input', handleSharedSlider);
+            trimBStartSlider.addEventListener('input', handleSharedSlider);
+            trimBEndSlider.addEventListener('input', handleSharedSlider);
+
+            async function loadSharedMP3(file) {
+                if (!file.type.startsWith('audio/')) {
+                    showToast('Not a valid audio file.', 'error');
+                    return;
+                }
+                sharedName.textContent = file.name;
+                sharedRemove.style.display = 'inline';
+                const ab = await file.arrayBuffer();
+                const actx = new AudioContext();
+                try {
+                    sharedAudioBuffer = await actx.decodeAudioData(ab);
+                    sharedTrimA.start = 0;
+                    sharedTrimA.end = sharedAudioBuffer.duration;
+                    sharedTrimB.start = 0;
+                    sharedTrimB.end = sharedAudioBuffer.duration;
+                    updateSharedTrimUI();
+                    showToast('Song loaded (' + formatDuration(sharedAudioBuffer.duration) + ')', 'success');
+                } catch (e) {
+                    showToast('Decode failed.', 'error');
+                    sharedAudioBuffer = null;
+                    sharedName.textContent = '';
+                    sharedRemove.style.display = 'none';
+                    updateSharedTrimUI();
+                }
+                actx.close();
+                updateBattleAvailability();
+            }
+
+            sharedSelect.addEventListener('click', () => sharedInput.click());
+            sharedInput.addEventListener('change', () => {
+                if (sharedInput.files[0]) loadSharedMP3(sharedInput.files[0]);
+                sharedInput.value = '';
+            });
+            sharedRemove.addEventListener('click', () => {
+                sharedAudioBuffer = null;
+                sharedName.textContent = '';
+                sharedRemove.style.display = 'none';
+                updateSharedTrimUI();
+                showToast('Song removed.', '');
+                updateBattleAvailability();
+            });
+
+            function getTrimmedBufferForDancer(dancer) {
+                if (!sharedAudioBuffer) return null;
+                const trim = dancer === 'A' ? sharedTrimA : sharedTrimB;
+                const sr = sharedAudioBuffer.sampleRate;
+                const startIdx = Math.floor(trim.start * sr);
+                const endIdx = Math.min(Math.ceil(trim.end * sr), sharedAudioBuffer.length);
+                if (startIdx >= endIdx) return null;
+                const buf = new AudioContext().createBuffer(1, endIdx - startIdx, sr);
+                buf.getChannelData(0).set(sharedAudioBuffer.getChannelData(0).subarray(startIdx, endIdx));
+                return buf;
+            }
+
+            // ───────────────────────────────────
+            // Per-slot video logic
+            // ───────────────────────────────────
+            const slots = [];
+            document.querySelectorAll('.video-slot').forEach(slot => {
+                const slotNum = slot.dataset.slot;
+                const dancer = slotNum === '1' ? 'A' : 'B';
+                const uploadZone = slot.querySelector('.upload-zone');
+                const fileInput = slot.querySelector('input[type="file"]');
+                const fileBadge = slot.querySelector('.file-badge');
+                const video = slot.querySelector('video');
+                const placeholder = slot.querySelector('.video-placeholder');
+                const overlay = slot.querySelector('.processing-overlay');
+                const progressBar = slot.querySelector('.progress-bar');
+                const progressFill = slot.querySelector('.progress-fill');
+                const progressText = overlay.querySelector('.progress-text');
+                const progressSub = overlay.querySelector('.progress-sub');
+                const infoChips = slot.querySelector('.info-chips');
+                const processBtn = slot.querySelector('.process-btn');
+                const changeBtn = slot.querySelector('.change-btn');
+                const muteBtn = slot.querySelector('.preview-mute-btn');
+                const downloadArea = slot.querySelector('.download-area');
+                const downloadLink = slot.querySelector('.download-link');
+                const previewProcBtn = slot.querySelector('.preview-processed-btn');
+                const discardBtn = slot.querySelector('.discard-btn');
+                const outputInfo = slot.querySelector('.output-info');
+
+                let originalFile = null,
+                    originalURL = null;
+                let processedBlob = null,
+                    processedURL = null;
+                let isProcessing = false,
+                    isPreviewingProc = false;
+                let mediaRecorder = null,
+                    canvasStream = null,
+                    canvas = null,
+                    ctx = null,
+                    animFrame = null,
+                    chunks = [];
+
+                function resetSlotUI() {
+                    video.pause();
+                    video.src = '';
+                    video.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                    video.muted = true;
+                    video.controls = true;
+                    isPreviewingProc = false;
+                    previewProcBtn.textContent = '▶️ Preview';
+                    uploadZone.classList.remove('has-file');
+                    uploadZone.querySelector('.upload-icon').textContent = '📁';
+                    uploadZone.querySelector('h3').textContent = 'Drop video here';
+                    uploadZone.querySelector('p').innerHTML = 'or <span class="browse-link">browse files</span>';
+                    fileBadge.style.display = 'none';
+                    infoChips.innerHTML = '';
+                    processBtn.disabled = true;
+                    muteBtn.disabled = true;
+                    downloadArea.classList.remove('active');
+                    outputInfo.textContent = '';
+                    downloadLink.href = '#';
+                    overlay.classList.remove('active');
+                    progressBar.classList.remove('active');
+                    progressFill.style.width = '0%';
+                    if (originalURL) URL.revokeObjectURL(originalURL);
+                    if (processedURL) URL.revokeObjectURL(processedURL);
+                    originalFile = null;
+                    originalURL = null;
+                    processedBlob = null;
+                    processedURL = null;
+                }
+
+                function cleanProcessing() {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') try { mediaRecorder.stop(); } catch (e) {}
+                    if (canvasStream) canvasStream.getTracks().forEach(t => t.stop());
+                    if (animFrame) cancelAnimationFrame(animFrame);
+                    if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+                    mediaRecorder = canvasStream = canvas = ctx = null;
+                    animFrame = null;
+                    chunks = [];
+                    isProcessing = false;
+                    overlay.classList.remove('active');
+                    progressBar.classList.remove('active');
+                    progressFill.style.width = '0%';
+                    video.controls = true;
+                    processBtn.disabled = !originalFile;
+                }
+
+                function loadVideo(file) {
+                    if (!file.type.startsWith('video/') && !/\.(mp4|webm|mov|avi|mkv|ogg|ogv|m4v|flv|wmv|3gp)$/i.test(
+                            file.name)) {
+                        showToast(`Dancer ${dancer}: Invalid video.`, 'error');
+                        return;
+                    }
+                    resetSlotUI();
+                    originalFile = file;
+                    originalURL = URL.createObjectURL(file);
+                    video.src = originalURL;
+                    video.muted = true;
+                    video.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    uploadZone.classList.add('has-file');
+                    uploadZone.querySelector('.upload-icon').textContent = '✅';
+                    uploadZone.querySelector('h3').textContent = 'Video loaded';
+                    uploadZone.querySelector('p').innerHTML =
+                        `<strong>${file.name}</strong> · ${formatSize(file.size)}`;
+                    fileBadge.style.display = 'inline-flex';
+                    fileBadge.innerHTML = '<span class="dot"></span> Ready';
+                    processBtn.disabled = false;
+                    muteBtn.disabled = false;
+                    video.addEventListener('loadedmetadata', () => { updateChips();
+                        processBtn.disabled = false;
+                        updateBattleAvailability(); }, { once: true });
+                    if (video.readyState >= 1) { updateChips();
+                        updateBattleAvailability(); }
+                    showToast(`Dancer ${dancer}: Video loaded.`, 'success');
+                }
+
+                function updateChips() {
+                    const dur = formatDuration(video.duration);
+                    const res = getResolution(video);
+                    const size = originalFile ? formatSize(originalFile.size) : '--';
+                    infoChips.innerHTML =
+                        `<span class="info-chip">⏱️ ${dur}</span><span class="info-chip">📐 ${res}</span><span class="info-chip">💾 ${size}</span>`;
+                }
+
+                async function processVideo() {
+                    if (!originalFile || isProcessing) return;
+                    if (!video.duration || !isFinite(video.duration)) {
+                        showToast(`Dancer ${dancer}: Video not ready.`, 'error');
+                        return;
+                    }
+                    isProcessing = true;
+                    processBtn.disabled = true;
+                    downloadArea.classList.remove('active');
+                    if (processedURL) URL.revokeObjectURL(processedURL);
+                    processedBlob = processedURL = null;
+                    chunks = [];
+                    video.pause();
+                    video.currentTime = 0;
+                    video.muted = true;
+                    video.controls = false;
+                    overlay.classList.add('active');
+                    progressBar.classList.add('active');
+                    progressFill.style.width = '0%';
+                    const vw = video.videoWidth || 1280,
+                        vh = video.videoHeight || 720,
+                        total = video.duration;
+                    canvas = document.createElement('canvas');
+                    canvas.width = vw;
+                    canvas.height = vh;
+                    canvas.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+                    document.body.appendChild(canvas);
+                    ctx = canvas.getContext('2d', { alpha: false });
+                    ctx.fillRect(0, 0, vw, vh);
+                    const trimmed = getTrimmedBufferForDancer(dancer);
+                    const combined = createCombinedStream(canvas, trimmed);
+                    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ?
+                        'video/webm;codecs=vp9,opus' :
+                        (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' :
+                            'video/webm');
+                    try { mediaRecorder = new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: 8000000 }); } catch {
+                        mediaRecorder = new MediaRecorder(combined); }
+                    mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+                    mediaRecorder.onstop = () => {
+                        processedBlob = new Blob(chunks, { type: mediaRecorder.mimeType });
+                        processedURL = URL.createObjectURL(processedBlob);
+                        overlay.classList.remove('active');
+                        progressBar.classList.remove('active');
+                        isProcessing = false;
+                        video.controls = true;
+                        processBtn.disabled = false;
+                        downloadArea.classList.add('active');
+                        downloadLink.href = processedURL;
+                        downloadLink.download = (originalFile.name.replace(/\.[^/.]+$/, '') || 'dancer') +
+                            '_export.webm';
+                        outputInfo.textContent =
+                            `Output: ${formatSize(processedBlob.size)} · ${trimmed ? 'Song segment' : 'No audio'} · ${vw}×${vh}`;
+                        showToast(`Dancer ${dancer}: Ready!`, 'success');
+                        if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+                        canvas = ctx = null;
+                        updateBattleAvailability();
+                    };
+                    mediaRecorder.start(100);
+                    const draw = () => {
+                        if (!isProcessing) return;
+                        ctx.drawImage(video, 0, 0, vw, vh);
+                        const pct = total ? Math.min(video.currentTime / total, 1) : 0;
+                        progressFill.style.width = (pct * 100).toFixed(1) + '%';
+                        progressSub.textContent = `${Math.round(pct*100)}%`;
+                        if (video.ended) { if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+                            animFrame = null; return; }
+                        animFrame = requestAnimationFrame(draw);
+                    };
+                    video.playbackRate = 1;
+                    try { await video.play(); } catch { cleanProcessing(); return; }
+                    animFrame = requestAnimationFrame(draw);
+                    setTimeout(() => { if (isProcessing && mediaRecorder?.state === 'recording') { mediaRecorder.stop();
+                            cancelAnimationFrame(animFrame); } }, (total * 1.5 + 10) * 1000);
+                }
+
+                function createCombinedStream(canvasEl, audioBuf) {
+                    const videoTrack = canvasEl.captureStream(30).getVideoTracks()[0];
+                    if (!audioBuf) return new MediaStream([videoTrack]);
+                    const audioCtx = new AudioContext();
+                    const dest = audioCtx.createMediaStreamDestination();
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = audioBuf;
+                    source.connect(dest);
+                    source.start(0);
+                    const stream = new MediaStream([videoTrack, dest.stream.getAudioTracks()[0]]);
+                    stream.addEventListener('inactive', () => { source.stop();
+                        audioCtx.close(); });
+                    return stream;
+                }
+
+                uploadZone.addEventListener('click', e => { if (!isProcessing) fileInput.click(); });
+                fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadVideo(fileInput.files[0]);
+                    fileInput.value = ''; });
+                uploadZone.addEventListener('dragover', e => { e.preventDefault(); if (!isProcessing) uploadZone
+                        .classList.add('drag-over'); });
+                uploadZone.addEventListener('dragleave', e => { uploadZone.classList.remove('drag-over'); });
+                uploadZone.addEventListener('drop', e => { e.preventDefault();
+                    uploadZone.classList.remove('drag-over'); if (!isProcessing && e.dataTransfer.files.length)
+                        loadVideo(e.dataTransfer.files[0]); });
+                changeBtn.addEventListener('click', () => { if (!isProcessing) { resetSlotUI();
+                        fileInput.click(); } });
+                muteBtn.addEventListener('click', () => { video.muted = !video.muted;
+                    muteBtn.textContent = video.muted ? '🔇 Muted' : '🔊 Unmuted';
+                    setTimeout(() => muteBtn.textContent = '👂 Toggle Mute', 2500); });
+                processBtn.addEventListener('click', processVideo);
+                previewProcBtn.addEventListener('click', () => {
+                    if (!processedURL) return;
+                    if (isPreviewingProc) { video.src = originalURL;
+                        video.muted = true;
+                        isPreviewingProc = false;
+                        previewProcBtn.textContent = '▶️ Preview'; } else { video.src = processedURL;
+                        video.muted = false;
+                        isPreviewingProc = true;
+                        previewProcBtn.textContent = '↩️ Original'; }
+                });
+                discardBtn.addEventListener('click', () => {
+                    if (isProcessing) return;
+                    if (processedURL) URL.revokeObjectURL(processedURL);
+                    processedBlob = processedURL = null;
+                    downloadArea.classList.remove('active');
+                    downloadLink.href = '#';
+                    if (isPreviewingProc) { video.src = originalURL;
+                        video.muted = true;
+                        isPreviewingProc = false;
+                        previewProcBtn.textContent = '▶️ Preview'; }
+                    updateBattleAvailability();
+                });
+
+                video.style.display = 'none';
+                placeholder.style.display = 'flex';
+                processBtn.disabled = true;
+                muteBtn.disabled = true;
+
+                slots.push({ slotNum, dancer, video, isProcessing: () => isProcessing });
+            });
+
+            // ───────────────────────────────────
+            // Battle Mode with shared song
+            // ───────────────────────────────────
+            const battleSection = document.getElementById('battleSection');
+            const btnBattle = document.getElementById('btnBattle');
+            const btnCancelBattle = document.getElementById('btnCancelBattle');
+            const battleProgressDiv = document.querySelector('.battle-progress');
+            const battleProgressFill = document.getElementById('battleProgressFill');
+            const battleProgressText = document.getElementById('battleProgressText');
+            const battleDownloadDiv = document.querySelector('.battle-download');
+            const btnDownloadBattle = document.getElementById('btnDownloadBattle');
+            const btnDiscardBattle = document.getElementById('btnDiscardBattle');
+            const battleOutputInfo = document.getElementById('battleOutputInfo');
+
+            let battleBlob = null,
+                battleURL = null,
+                battleProcessing = false,
+                battleRecorder = null,
+                battleCanvas = null,
+                battleCtx = null,
+                battleAnimFrame = null,
+                battleStream = null,
+                battleChunks = [];
+
+            function getVids() { return [document.querySelector('.video-slot[data-slot="1"] video'), document.querySelector(
+                    '.video-slot[data-slot="2"] video'
+                )]; }
+
+            function bothReady() { const [v1, v2] = getVids(); return v1 && v2 && v1.src && v2.src && v1.readyState >= 2 &&
+                    v2.readyState >= 2; }
+
+            function anySlotProc() { return slots.some(s => s.isProcessing()); }
+
+            function updateBattleAvailability() {
+                const ready = bothReady() && !anySlotProc() && !battleProcessing;
+                btnBattle.disabled = !ready;
+                battleSection.classList.toggle('visible', bothReady() || battleProcessing || battleBlob);
+            }
+
+            function cleanBattle() {
+                if (battleRecorder?.state !== 'inactive') try { battleRecorder.stop(); } catch (e) {}
+                if (battleStream) battleStream.getTracks().forEach(t => t.stop());
+                if (battleAnimFrame) cancelAnimationFrame(battleAnimFrame);
+                if (battleCanvas?.parentNode) battleCanvas.parentNode.removeChild(battleCanvas);
+                battleRecorder = battleStream = battleCanvas = battleCtx = null;
+                battleAnimFrame = null;
+                battleChunks = [];
+                battleProcessing = false;
+                battleProgressDiv.style.display = 'none';
+                btnCancelBattle.style.display = 'none';
+                btnBattle.style.display = 'inline-flex';
+                battleDownloadDiv.style.display = 'none';
+                btnBattle.disabled = !bothReady();
+                updateBattleAvailability();
+            }
+
+            function concatTrimmedBuffers(buf1, dur1, buf2, dur2, totalDur, sampleRate) {
+                const len = Math.ceil(totalDur * sampleRate);
+                const result = new AudioContext().createBuffer(1, len, sampleRate);
+                const data = result.getChannelData(0);
+                if (buf1) {
+                    const copyLen = Math.min(buf1.length, Math.ceil(dur1 * sampleRate));
+                    data.set(buf1.getChannelData(0).subarray(0, copyLen), 0);
+                }
+                if (buf2) {
+                    const copyLen = Math.min(buf2.length, Math.ceil(dur2 * sampleRate));
+                    const offset = Math.ceil(dur1 * sampleRate);
+                    data.set(buf2.getChannelData(0).subarray(0, copyLen), offset);
+                }
+                return result;
+            }
+
+            async function startBattle() {
+                if (battleProcessing || !bothReady() || anySlotProc()) return;
+                const [v1, v2] = getVids();
+                const bufA = getTrimmedBufferForDancer('A');
+                const bufB = getTrimmedBufferForDancer('B');
+                v1.pause();
+                v2.pause();
+                v1.currentTime = 0;
+                v2.currentTime = 0;
+                v1.muted = true;
+                v2.muted = true;
+                v1.controls = false;
+                v2.controls = false;
+                battleProcessing = true;
+                battleChunks = [];
+                if (battleURL) URL.revokeObjectURL(battleURL);
+                battleBlob = battleURL = null;
+                btnBattle.style.display = 'none';
+                btnCancelBattle.style.display = 'inline-flex';
+                btnCancelBattle.disabled = false;
+                battleProgressDiv.style.display = 'block';
+                battleDownloadDiv.style.display = 'none';
+                battleProgressFill.style.width = '0%';
+                battleProgressText.textContent = 'Dancer A performing...';
+                const outW = 1920,
+                    outH = 1080,
+                    halfW = outW / 2,
+                    dur1 = v1.duration,
+                    dur2 = v2.duration,
+                    total = dur1 + dur2;
+                battleCanvas = document.createElement('canvas');
+                battleCanvas.width = outW;
+                battleCanvas.height = outH;
+                battleCanvas.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+                document.body.appendChild(battleCanvas);
+                battleCtx = battleCanvas.getContext('2d');
+
+                function drawVid(v, x, y, w, h) { const vw = v.videoWidth,
+                        vh = v.videoHeight; if (!vw || !vh) return;
+                    const s = Math.min(w / vw, h / vh);
+                    battleCtx.drawImage(v, x + (w - vw * s) / 2, y + (h - vh * s) / 2, vw * s, vh * s); }
+
+                function drawVS() { battleCtx.save();
+                    battleCtx.font = 'bold 120px "Inter"';
+                    battleCtx.textAlign = 'center';
+                    battleCtx.textBaseline = 'middle';
+                    battleCtx.strokeStyle = '#000';
+                    battleCtx.lineWidth = 12;
+                    battleCtx.strokeText('VS', outW / 2, outH / 2);
+                    battleCtx.fillStyle = '#fff';
+                    battleCtx.fillText('VS', outW / 2, outH / 2);
+                    battleCtx.restore(); }
+                const combinedAudio = (bufA || bufB) ? concatTrimmedBuffers(bufA, dur1, bufB, dur2, total, (bufA || bufB)
+                    .sampleRate) : null;
+                const canvasStream = battleCanvas.captureStream(30);
+                let finalStream;
+                if (combinedAudio) {
+                    const audioCtx = new AudioContext();
+                    const dest = audioCtx.createMediaStreamDestination();
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = combinedAudio;
+                    source.connect(dest);
+                    source.start(0);
+                    finalStream = new MediaStream([canvasStream.getVideoTracks()[0], dest.stream.getAudioTracks()[0]]);
+                    const stopAudio = () => { source.stop();
+                        audioCtx.close(); };
+                    finalStream.addEventListener('inactive', stopAudio, { once: true });
+                } else finalStream = canvasStream;
+                const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : (
+                    MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' :
+                    'video/webm');
+                try { battleRecorder = new MediaRecorder(finalStream, { mimeType: mime, videoBitsPerSecond: 8000000 }); } catch {
+                    battleRecorder = new MediaRecorder(finalStream); }
+                battleRecorder.ondataavailable = e => { if (e.data.size) battleChunks.push(e.data); };
+                battleRecorder.onstop = () => {
+                    battleBlob = new Blob(battleChunks, { type: battleRecorder.mimeType });
+                    battleURL = URL.createObjectURL(battleBlob);
+                    battleProcessing = false;
+                    battleProgressDiv.style.display = 'none';
+                    btnCancelBattle.style.display = 'none';
+                    btnBattle.style.display = 'inline-flex';
+                    btnBattle.disabled = false;
+                    battleDownloadDiv.style.display = 'block';
+                    btnDownloadBattle.href = battleURL;
+                    btnDownloadBattle.download = 'dance_battle_trimmed.webm';
+                    battleOutputInfo.textContent =
+                        `Output: ${formatSize(battleBlob.size)} · ${combinedAudio ? 'Song segments' : 'No audio'} · ${outW}×${outH}`;
+                    showToast('⚔️ Battle ready!', 'success');
+                    v1.controls = v2.controls = true;
+                    if (battleCanvas?.parentNode) battleCanvas.parentNode.removeChild(battleCanvas);
+                    battleCanvas = battleCtx = null;
+                    updateBattleAvailability();
+                };
+                battleRecorder.start(100);
+                v1.playbackRate = 1;
+                try { await v1.play(); } catch { cleanBattle(); return; }
+                let secondStarted = false;
+
+                function drawBattle() {
+                    if (!battleProcessing) return;
+                    battleCtx.fillStyle = '#000';
+                    battleCtx.fillRect(0, 0, outW, outH);
+                    drawVid(v1, 0, 0, halfW, outH);
+                    drawVid(v2, halfW, 0, halfW, outH);
+                    drawVS();
+                    if (!secondStarted && v1.ended) { secondStarted = true;
+                        v2.currentTime = 0;
+                        v2.playbackRate = 1;
+                        v2.play().catch(() => {});
+                        battleProgressText.textContent = 'Dancer B performing...'; }
+                    const t1 = Math.min(v1.currentTime, dur1),
+                        t2 = secondStarted ? Math.min(v2.currentTime, dur2) : 0;
+                    battleProgressFill.style.width = Math.min(((t1 + t2) / total) * 100, 100).toFixed(1) + '%';
+                    if (v2.ended && secondStarted) { if (battleRecorder?.state === 'recording') battleRecorder.stop();
+                        battleAnimFrame = null; return; }
+                    battleAnimFrame = requestAnimationFrame(drawBattle);
+                }
+                battleAnimFrame = requestAnimationFrame(drawBattle);
+                setTimeout(() => { if (battleProcessing && battleRecorder?.state === 'recording') { battleRecorder.stop();
+                        cancelAnimationFrame(battleAnimFrame); } }, (total * 1.5 + 10) * 1000);
+            }
+
+            btnBattle.addEventListener('click', startBattle);
+            btnCancelBattle.addEventListener('click', () => { if (battleProcessing) { cleanBattle();
+                    showToast('Cancelled.', ''); } });
+            btnDiscardBattle.addEventListener('click', () => { if (battleProcessing) return; if (battleURL) URL
+                    .revokeObjectURL(battleURL);
+                battleBlob = battleURL = null;
+                battleDownloadDiv.style.display = 'none';
+                btnDownloadBattle.href = '#';
+                updateBattleAvailability(); });
+
+            updateBattleAvailability();
+            updateSharedTrimUI();
+        })();
+    </script>
+</body>
+</html>
